@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Burger Queen - Speaking Practice Kiosk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Titan+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bq-purple: #6b21a8;
+            --bq-gold: #f59e0b;
+            --bq-pink: #ec4899;
+        }
+        body { 
+            font-family: 'Patrick Hand', cursive; 
+            overscroll-behavior: none;
+            background-color: #f5f3ff;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+        }
+        .logo-font { font-family: 'Titan One', cursive; }
+        
+        .step-page { 
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            background-color: #f5f3ff;
+            z-index: 10;
+        }
+        .step-page.active { display: flex; }
+
+        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+        .scanner-line { 
+            position: absolute; 
+            width: 100%; 
+            height: 4px; 
+            background: #ec4899; 
+            box-shadow: 0 0 15px #ec4899; 
+            animation: scan 2s infinite linear; 
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .speech-bubble {
+            background: white;
+            border: 3px solid #6b21a8;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            position: relative;
+            box-shadow: 0 4px 0 #6b21a8;
+            margin-bottom: 1.5rem;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #6b21a8 transparent transparent;
+        }
+
+        .food-card { 
+            transition: transform 0.1s ease; 
+            border-radius: 2rem; 
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+        }
+        .food-card:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <!-- Step: Start Screen -->
+    <div id="step-start" class="step-page active bg-gradient-to-br from-purple-800 to-pink-600 text-white items-center justify-center p-6 text-center">
+        <div class="bg-white p-8 md:p-16 rounded-full shadow-2xl border-8 border-yellow-400 mb-12">
+            <h1 class="text-5xl md:text-8xl font-black logo-font text-purple-800 leading-none">
+                BURGER<br><span class="text-pink-500">QUEEN</span>
+            </h1>
+            <div class="text-yellow-500 text-4xl md:text-6xl mt-2">👑</div>
+        </div>
+        <div class="speech-bubble text-purple-800 text-xl md:text-3xl font-bold italic animate-bounce">
+            "Welcome to Burger Queen! Tap to start."
+        </div>
+        <button onclick="goToStep('dining')" class="bg-yellow-400 text-purple-900 px-12 py-6 rounded-full shadow-[0_8px_0_#b45309] active:translate-y-2 active:shadow-none transition-all text-3xl md:text-5xl font-bold uppercase mt-8">
+            Start
+        </button>
+    </div>
+
+    <!-- Step: Dining Option -->
+    <div id="step-dining" class="step-page items-center justify-center p-4">
+        <div class="speech-bubble text-purple-800 text-xl md:text-3xl font-bold italic mb-12">
+            "For here or to go?"
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+            <div onclick="selectDining('Eat In')" class="food-card cursor-pointer border-4 border-transparent hover:border-pink-500 p-8 text-center shadow-2xl">
+                <div class="text-8xl md:text-9xl mb-6">🍽️</div>
+                <span class="text-4xl font-bold text-purple-800 uppercase">Eat In</span>
+            </div>
+            <div onclick="selectDining('Take Out')" class="food-card cursor-pointer border-4 border-transparent hover:border-pink-500 p-8 text-center shadow-2xl">
+                <div class="text-8xl md:text-9xl mb-6">🛍️</div>
+                <span class="text-4xl font-bold text-purple-800 uppercase">Take Out</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step: Ordering Screen -->
+    <div id="step-order" class="step-page flex-row overflow-hidden bg-white">
+        <!-- Sidebar Navigation -->
+        <nav class="w-20 md:w-40 bg-purple-900 flex flex-col shrink-0">
+            <button onclick="changeCategory('main')" class="cat-btn flex-1 flex flex-col items-center justify-center text-white bg-purple-700 border-l-8 border-yellow-400">
+                <span class="text-3xl mb-1">🍔</span>
+                <span class="text-[10px] md:text-lg font-bold uppercase">Mains</span>
+            </button>
+            <button onclick="changeCategory('sides')" class="cat-btn flex-1 flex flex-col items-center justify-center text-purple-300">
+                <span class="text-3xl mb-1">🍟</span>
+                <span class="text-[10px] md:text-lg font-bold uppercase">Sides</span>
+            </button>
+            <button onclick="changeCategory('drinks')" class="cat-btn flex-1 flex flex-col items-center justify-center text-purple-300">
+                <span class="text-3xl mb-1">🥤</span>
+                <span class="text-[10px] md:text-lg font-bold uppercase">Drinks</span>
+            </button>
+            <button onclick="changeCategory('desserts')" class="cat-btn flex-1 flex flex-col items-center justify-center text-purple-300">
+                <span class="text-3xl mb-1">🍦</span>
+                <span class="text-[10px] md:text-lg font-bold uppercase">Sweets</span>
+            </button>
+        </nav>
+
+        <!-- Menu Area -->
+        <div class="flex-grow flex flex-col p-4 md:p-6 bg-purple-50 overflow-hidden relative">
+            <div id="order-prompt" class="bg-purple-800 text-white p-4 rounded-2xl mb-6 text-center font-bold text-2xl md:text-3xl italic shadow-lg">
+                "What would you like to eat?"
+            </div>
+            <div id="menu-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto no-scrollbar pb-32">
+                <!-- Food cards rendered by JS -->
+            </div>
+            
+            <!-- Mobile Cart Button -->
+            <div class="md:hidden absolute bottom-6 right-6 flex items-end">
+                <button onclick="toggleMobileCart(true)" class="bg-pink-500 text-white p-5 rounded-full shadow-2xl flex items-center gap-3 active:scale-95 transition-transform">
+                    <span class="text-3xl">🛒</span>
+                    <span id="mobile-cart-total" class="font-bold text-xl">$0.00</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Desktop Sidebar Cart -->
+        <aside class="hidden md:flex w-72 lg:w-80 bg-white border-l-4 border-purple-100 flex-col shadow-2xl shrink-0">
+            <div class="p-4 bg-purple-800 text-white flex items-center justify-between">
+                <span class="font-bold text-xl logo-font tracking-wider uppercase">Your Order</span>
+                <span id="cart-count" class="bg-pink-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white">0</span>
+            </div>
+            <div class="p-3 bg-pink-50 text-center text-pink-600 font-bold italic text-lg border-b border-pink-100">
+                "Is that all?"
+            </div>
+            <div id="cart-list" class="flex-grow overflow-y-auto p-3 space-y-3 bg-gray-50 no-scrollbar"></div>
+            <div class="p-4 bg-white border-t-4 border-purple-100">
+                <div class="flex justify-between text-2xl font-bold mb-4">
+                    <span class="text-gray-400 font-normal">Total:</span>
+                    <span id="total-price" class="text-purple-700">$0.00</span>
+                </div>
+                <button id="checkout-btn" disabled onclick="goConfirm()" 
+                        class="w-full bg-pink-500 text-white py-4 rounded-2xl text-2xl font-bold uppercase shadow-[0_6px_0_#be185d] active:translate-y-1 active:shadow-none transition-all disabled:opacity-30">
+                    Confirm Order
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Step: Final Confirm Review -->
+    <div id="step-confirm" class="step-page items-center justify-center bg-purple-100 p-4">
+        <div class="speech-bubble text-purple-800 text-xl md:text-3xl font-bold italic mb-8">
+            "Is that all? Please review your order."
+        </div>
+        <div class="bg-white p-6 md:p-10 rounded-[3rem] shadow-2xl w-full max-w-3xl border-8 border-white">
+            <div id="confirm-list" class="divide-y-2 divide-purple-50 mb-6 max-h-[45vh] overflow-y-auto px-2 no-scrollbar"></div>
+            <div class="border-t-4 border-dashed border-purple-200 pt-6 mb-6 flex justify-between text-4xl font-bold">
+                <span class="text-gray-400 font-normal">Total</span>
+                <span id="confirm-total" class="text-purple-700">$0.00</span>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="goToStep('order')" class="py-5 rounded-2xl text-xl md:text-3xl font-bold bg-gray-100 text-gray-400 border-2 border-gray-200">Back</button>
+                <button onclick="goToStep('payment')" class="py-5 rounded-2xl text-xl md:text-3xl font-bold bg-green-500 text-white shadow-[0_6px_0_#15803d]">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step: Choose Payment -->
+    <div id="step-payment" class="step-page items-center justify-center p-4">
+        <div class="speech-bubble text-purple-800 text-xl md:text-3xl font-bold italic mb-10">
+            "How would you like to pay?"
+        </div>
+        <div class="grid grid-cols-2 gap-6 w-full max-w-3xl">
+            <button onclick="initiatePayment('mobile')" class="bg-white p-8 rounded-[2.5rem] border-4 border-transparent hover:border-pink-500 shadow-xl flex flex-col items-center">
+                <span class="text-7xl mb-4">📱</span>
+                <span class="text-2xl font-bold text-pink-600 uppercase">Mobile Pay</span>
+            </button>
+            <button onclick="initiatePayment('card')" class="bg-white p-8 rounded-[2.5rem] border-4 border-transparent hover:border-purple-500 shadow-xl flex flex-col items-center">
+                <span class="text-7xl mb-4">💳</span>
+                <span class="text-2xl font-bold text-purple-600 uppercase">Credit Card</span>
+            </button>
+            <button onclick="initiatePayment('cash')" class="bg-white p-8 rounded-[2.5rem] border-4 border-transparent hover:border-green-500 shadow-xl flex flex-col items-center">
+                <span class="text-7xl mb-4">💵</span>
+                <span class="text-2xl font-bold text-green-600 uppercase">Cash</span>
+            </button>
+            <button onclick="initiatePayment('counter')" class="bg-white p-8 rounded-[2.5rem] border-4 border-transparent hover:border-gray-500 shadow-xl flex flex-col items-center">
+                <span class="text-7xl mb-4">🛎️</span>
+                <span class="text-2xl font-bold text-gray-600 uppercase">At Counter</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Step: Payment Action Animation -->
+    <div id="step-pay-action" class="step-page items-center justify-center p-6 bg-gray-100">
+        <div id="pay-action-content" class="bg-white p-12 rounded-[3.5rem] shadow-2xl max-w-xl w-full text-center relative overflow-hidden"></div>
+    </div>
+
+    <!-- Step: Success Screen -->
+    <div id="step-success" class="step-page items-center justify-center p-6 bg-green-500">
+        <div class="bg-white w-full max-w-md rounded-[3.5rem] p-10 text-center shadow-2xl">
+            <h2 class="text-4xl font-bold mb-4 text-gray-800 logo-font uppercase tracking-tighter">Order Sent!</h2>
+            <div class="border-y-4 border-dashed border-gray-100 py-8 my-6">
+                <p class="text-xl text-gray-400 font-bold mb-2 uppercase">Your Number</p>
+                <p id="final-number" class="text-8xl font-black text-purple-700 logo-font">#000</p>
+            </div>
+            <div class="speech-bubble text-purple-800 text-xl font-bold italic mb-6">
+                "Enjoy your meal! Have a nice day."
+            </div>
+            <button onclick="resetApp()" class="w-full bg-purple-800 text-white py-6 rounded-3xl text-3xl font-bold uppercase">Finish</button>
+        </div>
+    </div>
+
+    <!-- Mobile Cart Overlay -->
+    <div id="mobile-cart-overlay" class="fixed inset-0 bg-black/60 z-[100] hidden flex-col justify-end">
+        <div class="bg-white rounded-t-[3.5rem] p-8 max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-purple-800 uppercase logo-font">Your Order</h3>
+                <button onclick="toggleMobileCart(false)" class="text-5xl text-gray-400 p-2">&times;</button>
+            </div>
+            <div class="bg-pink-100 border-2 border-pink-200 rounded-3xl p-4 mb-4 text-center">
+                <p class="text-pink-600 font-bold text-2xl italic">"Is that all?"</p>
+            </div>
+            <!-- 這邊是品項清單容器 -->
+            <div id="mobile-cart-list" class="flex-grow overflow-y-auto space-y-3 mb-6 no-scrollbar min-h-[100px]">
+                <!-- Mobile items will be injected here -->
+            </div>
+            <button onclick="goConfirmMobile()" class="w-full bg-pink-500 text-white py-5 rounded-3xl text-2xl font-bold uppercase shadow-xl active:scale-95 transition-transform">
+                Confirm Order
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const menuData = {
+            main: [
+                { id: 1, name: "Hamburger", price: 6.99, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", countable: true },
+                { id: 2, name: "Sandwich", price: 5.50, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400", countable: true },
+                { id: 3, name: "Hot Dog", price: 4.25, img: "https://images.unsplash.com/photo-1541214113241-21578d2d9b62?w=400", countable: true },
+                { id: 4, name: "Salad", price: 5.99, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400", countable: true },
+                { id: 5, name: "Soup", price: 3.99, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400", countable: false }
+            ],
+            sides: [
+                { id: 6, name: "French Fries", price: 3.50, img: "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?w=400", countable: false },
+                { id: 7, name: "Apple Pie", price: 2.99, img: "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=400", countable: true },
+                { id: 8, name: "Onion Rings", price: 3.99, img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400", countable: false }
+            ],
+            drinks: [
+                { id: 9, name: "Milk", price: 2.50, img: "https://images.unsplash.com/photo-1563636619-e910ef2a844b?w=400", countable: false },
+                { id: 10, name: "Orange Juice", price: 3.25, img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400", countable: false },
+                { id: 11, name: "Water", price: 1.99, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400", countable: false },
+                { id: 12, name: "Soda", price: 2.50, img: "https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=400", countable: false }
+            ],
+            desserts: [
+                { id: 13, name: "Ice Cream", price: 2.50, img: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400", countable: false }
+            ]
+        };
+
+        let cart = [];
+        let currentCategory = 'main';
+
+        function getPluralText(item, count) {
+            if (count === 1) return `One ${item.name}`;
+            if (!item.countable) return `${count} ${item.name}`;
+            let name = item.name;
+            if (name.toLowerCase().endsWith('ch')) return `${count} ${name}es`;
+            if (name.toLowerCase().endsWith('y')) return `${count} ${name.slice(0, -1)}ies`;
+            return `${count} ${name}s`;
+        }
+
+        function updatePrompt(text) {
+            const promptBox = document.getElementById('order-prompt');
+            if (promptBox) promptBox.innerText = `"${text}"`;
+        }
+
+        function goToStep(stepId) {
+            document.querySelectorAll('.step-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`step-${stepId}`).classList.add('active');
+            if (stepId === 'order') {
+                toggleMobileCart(false);
+                if (cart.length === 0) updatePrompt("What would you like to eat?");
+            }
+        }
+
+        function selectDining(opt) {
+            goToStep('order');
+            renderMenu();
+        }
+
+        function changeCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-purple-700', 'text-white', 'border-l-8', 'border-yellow-400');
+                btn.classList.add('text-purple-300');
+            });
+            event.currentTarget.classList.add('bg-purple-700', 'text-white', 'border-l-8', 'border-yellow-400');
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+            menuData[currentCategory].forEach(item => {
+                const card = document.createElement('div');
+                card.className = "food-card p-5 shadow-xl cursor-pointer border-4 border-transparent hover:border-purple-200 transition-all";
+                card.onclick = () => addToCart(item);
+                card.innerHTML = `
+                    <div class="w-28 h-28 md:w-36 md:h-36 bg-purple-50 rounded-full mb-4 flex items-center justify-center overflow-hidden border-4 border-white shadow-inner flex-shrink-0">
+                        <img src="${item.img}" onerror="this.src='https://placehold.co/200x200/6b21a8/ffffff?text=${item.name}'" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-xl md:text-2xl font-bold text-purple-900 mb-1 leading-tight text-center">${item.name}</h3>
+                        <div class="text-pink-600 font-bold text-xl md:text-2xl">$${item.price.toFixed(2)}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addToCart(item) {
+            const exist = cart.find(i => i.id === item.id);
+            let text = "";
+            if (exist) {
+                exist.quantity++;
+                text = getPluralText(item, exist.quantity);
+            } else {
+                cart.push({ ...item, quantity: 1 });
+                text = `One ${item.name}`;
+            }
+            updateCartUI();
+            updatePrompt(text);
+        }
+
+        function updateQty(id, delta) {
+            const idx = cart.findIndex(i => i.id === id);
+            if (idx > -1) {
+                let text = "";
+                cart[idx].quantity += delta;
+                if (cart[idx].quantity <= 0) {
+                    text = `Removed ${cart[idx].name}`;
+                    cart.splice(idx, 1);
+                } else {
+                    text = getPluralText(cart[idx], cart[idx].quantity);
+                }
+                updateCartUI();
+                updatePrompt(text);
+            }
+        }
+
+        function updateCartUI() {
+            const list = document.getElementById('cart-list');
+            const mobileList = document.getElementById('mobile-cart-list');
+            const totalDisplay = document.getElementById('total-price');
+            const mobileTotalDisplay = document.getElementById('mobile-cart-total');
+            const countDisplay = document.getElementById('cart-count');
+            const btn = document.getElementById('checkout-btn');
+
+            let total = 0;
+            let count = 0;
+            let itemsHtml = cart.length === 0 ? '<div class="text-center text-gray-300 py-10 italic text-xl">Empty Cart</div>' : '';
+
+            if (cart.length === 0) {
+                updatePrompt("What would you like to eat?");
+            }
+
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                count += item.quantity;
+                itemsHtml += `
+                    <div class="bg-white p-3 rounded-2xl flex items-center justify-between shadow-md border border-purple-100">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-50 flex-shrink-0 border-2 border-gray-100">
+                                <img src="${item.img}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-left">
+                                <p class="font-bold text-purple-900 text-lg leading-tight">${item.name}</p>
+                                <p class="text-pink-500 font-bold text-base">$${(item.price * item.quantity).toFixed(2)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="event.stopPropagation(); updateQty(${item.id}, -1)" class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center text-red-500 font-black border-2 border-purple-100 text-xl">-</button>
+                            <span class="text-lg font-bold w-6 text-center">${item.quantity}</span>
+                            <button onclick="event.stopPropagation(); updateQty(${item.id}, 1)" class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center text-green-500 font-black border-2 border-purple-100 text-xl">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // 更新兩個清單容器
+            if (list) list.innerHTML = itemsHtml;
+            if (mobileList) mobileList.innerHTML = itemsHtml;
+            
+            if (totalDisplay) totalDisplay.innerText = `$${total.toFixed(2)}`;
+            if (mobileTotalDisplay) mobileTotalDisplay.innerText = `$${total.toFixed(2)}`;
+            if (countDisplay) countDisplay.innerText = count;
+            if (btn) btn.disabled = cart.length === 0;
+        }
+
+        function toggleMobileCart(show) {
+            const overlay = document.getElementById('mobile-cart-overlay');
+            if (overlay) {
+                overlay.style.display = show ? 'flex' : 'none';
+                if (show) updateCartUI(); // 打開時再次強制更新 UI 確保內容正確
+            }
+        }
+
+        function goConfirmMobile() {
+            toggleMobileCart(false);
+            goConfirm();
+        }
+
+        function goConfirm() {
+            const list = document.getElementById('confirm-list');
+            const totalVal = document.getElementById('total-price').innerText;
+            document.getElementById('confirm-total').innerText = totalVal;
+            
+            list.innerHTML = cart.map(item => `
+                <div class="py-6 flex justify-between items-center">
+                    <div class="flex items-center gap-6 text-left">
+                        <div class="w-20 h-20 bg-purple-50 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+                            <img src="${item.img}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-purple-900">${getPluralText(item, item.quantity)}</p>
+                            <p class="text-gray-400 text-xl uppercase tracking-widest font-bold">Details</p>
+                        </div>
+                    </div>
+                    <span class="text-3xl font-bold text-pink-600">$${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+            goToStep('confirm');
+        }
+
+        function initiatePayment(method) {
+            const content = document.getElementById('pay-action-content');
+            let timer = 4000;
+
+            if (method === 'mobile') {
+                content.innerHTML = `
+                    <div class="speech-bubble text-pink-600 text-2xl font-bold mb-8 italic">"Please scan your phone here."</div>
+                    <div class="relative w-64 h-64 bg-white border-8 border-purple-50 shadow-2xl mx-auto mb-8 flex items-center justify-center overflow-hidden rounded-[2rem]">
+                        <div class="scanner-line"></div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=BQ" class="w-48 h-48 opacity-30">
+                    </div>
+                `;
+            } else if (method === 'card') {
+                content.innerHTML = `
+                    <div class="speech-bubble text-purple-600 text-2xl font-bold mb-8 italic">"Please tap or insert your card."</div>
+                    <div class="w-80 h-48 bg-gradient-to-br from-purple-800 to-purple-600 mx-auto rounded-[2rem] border-8 border-white shadow-2xl flex flex-col justify-end p-8 items-start">
+                        <div class="w-14 h-10 bg-yellow-400 rounded-xl mb-3"></div>
+                        <div class="w-32 h-3 bg-purple-400 rounded-full"></div>
+                    </div>
+                `;
+            } else if (method === 'cash') {
+                content.innerHTML = `
+                    <div class="speech-bubble text-green-600 text-2xl font-bold mb-8 italic">"Please insert your cash."</div>
+                    <div class="w-full h-24 bg-gray-900 rounded-3xl mb-8 border-8 border-gray-100 shadow-2xl flex items-center justify-center">
+                        <div class="w-4/5 h-3 bg-green-400 blur-sm animate-pulse"></div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="speech-bubble text-gray-700 text-2xl font-bold mb-8 italic">"Please go to the counter."</div>
+                    <div class="text-[10rem] animate-bounce">🧾</div>
+                `;
+                timer = 5000;
+            }
+
+            goToStep('pay-action');
+            setTimeout(finishOrder, timer);
+        }
+
+        function finishOrder() {
+            const num = Math.floor(Math.random() * 899) + 101;
+            document.getElementById('final-number').innerText = `#${num}`;
+            goToStep('success');
+        }
+
+        function resetApp() {
+            cart = [];
+            updateCartUI();
+            updatePrompt("What would you like to eat?");
+            goToStep('start');
+        }
+
+        window.onload = renderMenu;
+    </script>
+</body>
+</html>
